@@ -3,21 +3,27 @@ import decimal as dc
 import time
 import argparse
 import multiprocessing
-import numpy as np
-from ctypes import c_longdouble
+from ctypes import *
 
 import dummy
 # dummy.final_sum = dc.Decimal(dummy.final_sum)
 
 # p = 2000 ~ Execution time: 22.088331699371338
-
+PROCESSES_COUNT = 0
+IS_QUIET = False
 
 def calculate_current(i):  # noqa
-    print(i)
-    current = dc.Decimal(pow(3 * i, 2) + 1) / dc.Decimal(factorial(3 * i))
-    print('current', current)
-    dummy.final_sum.value += current
-    print('calculate_current', 'id:', i, 'value:', dummy.final_sum.value)
+    # print(i)
+    a = c_ulonglong(pow(3 * i, 2) + 1)
+    b = c_ulonglong(factorial(3 * i))
+    print(a.value)
+    print(b.value)
+    # current = c_ulonglong(pow(3 * i, 2) + 1).value / c_ulonglong(factorial(3 * i)).value
+    current = c_longdouble(a.value / b.value)
+    print('current', current.value)
+    dummy.final_sum.value += current.value
+    if not IS_QUIET:
+        print('calculate_current', 'id:', i, 'value:', dummy.final_sum.value)
 
 
 # def job_fn(i):  # noqa
@@ -26,46 +32,65 @@ def calculate_current(i):  # noqa
 
 
 def init_process(share):  # noqa
+    global PROCESSES_COUNT
+    PROCESSES_COUNT += 1
     dummy.final_sum = share
-    print ("initProcess")
+    if not IS_QUIET:
+        print('Init Process N {}'.format(PROCESSES_COUNT))
 
 
 def main():  # noqa
-
+    global PROCESSES_COUNT, IS_QUIET
     parser = argparse.ArgumentParser(description='Calculate e.')
     # parser.add_argument(
     #     'integers', metavar='N', type=int, nargs='+',
     #     help='an integer for the accumulator')
     parser.add_argument(
         '-q',
-        # dest='accumulate', action='store_const',
-        help='Specify quit mode of calculating.')
+        # dest='accumulate',
+        action='store_true',
+        default=False,
+        help='Specify quiet mode of calculating. By default it is disabled.')
 
     parser.add_argument(
         '-p',
         # dest='accumulate', action='store_const',
         metavar='N',
         type=int,
-        help='Specify number of iterations (items in sequence).')
+        default=2000,
+        help='Specify number of iterations (items in sequence). If not specified it is set to 2 000.')
 
     parser.add_argument(
         '-t',
         # dest='accumulate', action='store_const',
         metavar='N',
         type=int,
-        help='Specify number of processors to be used for the calculation.')
+        default=multiprocessing.cpu_count(),
+        help='Specify number of processors to be used for the calculation. If not specified it is set to max cpu count of current PC.')
 
     parser.add_argument(
         '-d',
         # dest='accumulate', action='store_const',
         metavar='N',
         type=int,
-        help='Specify set precision for calculation.')
+        default=20000,
+        help='Specify set precision for calculation. If not specified it is set to 20 000.')
 
     args = parser.parse_args()
-    iterations_count = args.p if args.p else 2000
-    processors_number = args.t if args.t else multiprocessing.cpu_count()
-    digits_precision = args.t if args.t else 20000
+    # iterations_count = args.p if args.p else 2000
+    # processors_number = args.t if args.t else multiprocessing.cpu_count()
+    # digits_precision = args.d if args.t else 20000
+    # IS_QUIET = True if args.q else False
+
+    iterations_count = args.p
+    processors_number = args.t
+    digits_precision = args.d
+    IS_QUIET = args.q
+    print('iterations_count', iterations_count)
+    print('processors_number', processors_number)
+    print('digits_precision', digits_precision)
+    print('IS_QUIET', IS_QUIET)
+    return
     dc.getcontext().prec = digits_precision
 
     # for i in range(iterations_count):
@@ -75,7 +100,8 @@ def main():  # noqa
     # aren't writing to it and want to allow multiple processes to access
     # at the same time - I think with lock=True there would be little or
     # no speedup
-    result = multiprocessing.Value('f', 0.)
+    # result = multiprocessing.Value('d', 0.)
+    result = multiprocessing.Value(c_longdouble, 0.)
 
     # fork
     pool = multiprocessing.Pool(processors_number, initializer=init_process, initargs=(result,))
@@ -87,8 +113,11 @@ def main():  # noqa
     for x in jobs:
         x.get()
 
+    if not IS_QUIET:
+        print('Number of started processes: {count}'.format(count=PROCESSES_COUNT))
+
     print(result.value)
-    print('Execution time: {0}'.format(time.time() - start))
+    print('Total execution time: {time_took}'.format(time_took=(time.time() - start)))
 
     pool.close()
     pool.join()
