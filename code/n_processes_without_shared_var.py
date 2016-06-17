@@ -35,7 +35,9 @@ def init_process():  # noqa
 def main():  # noqa
     global IS_QUIET, final_res
 
-    parser = argparse.ArgumentParser(description='Calculate e.')
+    parser = argparse.ArgumentParser(description='''
+This is multiprocessing program which calculates e as a finite sum with Python:
+e=∑((3k)^2 + 1) / ((3k)!), where k = 0,... ,∞''')
     parser.add_argument(
         '-q',
         action='store_true',
@@ -44,28 +46,28 @@ def main():  # noqa
 
     parser.add_argument(
         '-p',
-        metavar='N',
+        metavar='iterations_count',
         type=int,
         default=2000,
         help='Specify number of iterations (items in sequence). If not specified it is set to 2 000.')  # noqa
 
     parser.add_argument(
         '-t',
-        metavar='N',
+        metavar='cpu_count',
         type=int,
         default=multiprocessing.cpu_count(),
         help='Specify number of processors to be used for the calculation. If not specified it is set to max cpu count of current PC.')  # noqa
 
     parser.add_argument(
         '-d',
-        metavar='N',
+        metavar='digits_precision',
         type=int,
         default=20000,
         help='Specify set precision for calculation. If not specified it is set to 20 000.')  # noqa
 
     parser.add_argument(
         '-o',
-        metavar='S',
+        metavar='filename',
         type=str,
         default='result.txt',
         help='Specify name of file with calcuated result. Default value is "result.txt".')  # noqa
@@ -76,7 +78,7 @@ def main():  # noqa
     processors_number = args.t
     digits_precision = args.d
     IS_QUIET = args.q
-    file_name = args.o
+    filename = args.o
 
     dc.getcontext().prec = digits_precision
 
@@ -95,7 +97,7 @@ def main():  # noqa
 
     print('Total execution time: {time_took}'.format(time_took=(time.time() - start)))  # noqa
 
-    with open(file_name, 'w') as opened_file:
+    with open(filename, 'w') as opened_file:
         opened_file.write(str(final_res))
 
     pool.close()

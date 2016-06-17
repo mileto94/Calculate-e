@@ -48,7 +48,9 @@ def init_process(share):  # noqa
 
 def main():  # noqa
     global IS_QUIET, final_res
-    parser = argparse.ArgumentParser(description='Calculate e.')
+    parser = argparse.ArgumentParser(description='''
+This is multiprocessing program which calculates e as a finite sum.
+e=∑((3k)^2 + 1) / ((3k)!), k =0,... ,∞''')
     # parser.add_argument(
     #     'integers', metavar='N', type=int, nargs='+',
     #     help='an integer for the accumulator')
