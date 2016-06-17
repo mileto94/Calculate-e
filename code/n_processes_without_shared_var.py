@@ -53,10 +53,10 @@ e=∑((3k)^2 + 1) / ((3k)!), where k = 0,... ,∞''')
 
     parser.add_argument(
         '-t',
-        metavar='cpu_count',
+        metavar='cores_count',
         type=int,
         default=multiprocessing.cpu_count(),
-        help='Specify number of processors to be used for the calculation. If not specified it is set to max cpu count of current PC.')  # noqa
+        help='Specify number of cores to be used for the calculation. If not specified it is set to max cpu count of current PC.')  # noqa
 
     parser.add_argument(
         '-d',
@@ -75,7 +75,7 @@ e=∑((3k)^2 + 1) / ((3k)!), where k = 0,... ,∞''')
     args = parser.parse_args()
 
     iterations_count = args.p
-    processors_number = args.t
+    cores_number = args.t
     digits_precision = args.d
     IS_QUIET = args.q
     filename = args.o
@@ -83,7 +83,7 @@ e=∑((3k)^2 + 1) / ((3k)!), where k = 0,... ,∞''')
     dc.getcontext().prec = digits_precision
 
     # fork
-    pool = multiprocessing.Pool(processors_number, initializer=init_process)
+    pool = multiprocessing.Pool(cores_number, initializer=init_process)
     start = time.time()
 
     jobs = [pool.apply_async(calculate_current, [i], callback=add_current) for i in range(iterations_count)]  # noqa
