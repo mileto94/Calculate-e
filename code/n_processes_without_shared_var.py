@@ -4,16 +4,16 @@ import time
 import argparse
 import multiprocessing
 
-
 # p = 2000 ~ Execution time: 22.088331699371338
 
-PROCESSES_COUNT = 0
+dc.getcontext().prec = 99
+
 IS_QUIET = False
 final_res = dc.Decimal(0)
 
 
 def calculate_current(i):  # noqa
-    current = dc.Decimal((pow(3 * i, 2) + 1)) / dc.Decimal(factorial(3 * i))
+    current = dc.Decimal((pow(3 * i, 2) + 1) / factorial(3 * i))
     if not IS_QUIET:
         print('current: {}'.format(current))
         print('process {} is calculating calculate_current with index {}'.format(multiprocessing.current_process(), i))  # noqa
@@ -23,12 +23,11 @@ def calculate_current(i):  # noqa
 def add_current(current):  # noqa
     global final_res
     final_res += current
+    print(current)
     print('Final result: {}'.format(final_res))
 
 
 def init_process():  # noqa
-    global PROCESSES_COUNT
-    PROCESSES_COUNT += 1
     if not IS_QUIET:
         print('Init Process {}'.format(multiprocessing.current_process().name))
 
@@ -64,15 +63,22 @@ def main():  # noqa
         default=20000,
         help='Specify set precision for calculation. If not specified it is set to 20 000.')  # noqa
 
+    parser.add_argument(
+        '-o',
+        metavar='S',
+        type=str,
+        default='result.txt',
+        help='Specify name of file with calcuated result. Default value is "result.txt".')  # noqa
+
     args = parser.parse_args()
 
     iterations_count = args.p
     processors_number = args.t
     digits_precision = args.d
     IS_QUIET = args.q
+    file_name = args.o
 
     dc.getcontext().prec = digits_precision
-    final_res = dc.Decimal(0)
 
     # fork
     pool = multiprocessing.Pool(processors_number, initializer=init_process)
@@ -84,9 +90,13 @@ def main():  # noqa
         x.get()
 
     if not IS_QUIET:
-        print('Number of started processes: {count}'.format(count=PROCESSES_COUNT))  # noqa
+        print('Number of started processes: {count}'.format(count=pool._processes))  # noqa
+        print('RESULT: {}'.format(final_res))
 
     print('Total execution time: {time_took}'.format(time_took=(time.time() - start)))  # noqa
+
+    with open(file_name, 'w') as opened_file:
+        opened_file.write(str(final_res))
 
     pool.close()
     pool.join()
