@@ -3,28 +3,35 @@ import decimal as dc
 import time
 import argparse
 import multiprocessing
-from ctypes import *  # noqa
+# from ctypes import *  # noqa
 
-import dummy
-# dummy.final_sum = dc.Decimal(dummy.final_sum)
+# import tmp_dummy
+
 
 # p = 2000 ~ Execution time: 22.088331699371338
 PROCESSES_COUNT = 0
 IS_QUIET = False
+# dc.getcontext().prec = 999999999
+final_res = dc.Decimal(0)
+
 
 def calculate_current(i):  # noqa
-    # print(i)
-    a = (pow(3 * i, 2) + 1)
-    b = (factorial(3 * i))
-    # print(a.value)
-    # print(b.value)
-    # current = c_ulonglong(pow(3 * i, 2) + 1).value / c_ulonglong(factorial(3 * i)).value  # noqa
-    current = dc.Decimal(a / b)
-    print('current', current)
-    dummy.final_sum.value += current
-    if not IS_QUIET:
-        print('calculate_current', 'id:', i, 'value:', dummy.final_sum.value)
+    global final_res
 
+    current = dc.Decimal((pow(3 * i, 2) + 1)) / dc.Decimal(factorial(3 * i))
+    final_res += current
+    # tmp_dummy.final_sum.value += current
+    if not IS_QUIET:
+        # print('calculate_current', 'id:', i, 'value:', tmp_dummy.final_sum.value)
+        print('process {} is calculating calculate_current with index {}'.format(multiprocessing.current_process(), i))
+    return current
+
+def add_current(current):  # noqa
+    # global final_res
+    # final_res += current
+    # print('Final result: {}'.format(final_res))
+    # print(current)
+    pass
 
 # def job_fn(i):  # noqa
 #     dummy.final_sum.value += factorial(i)
@@ -34,13 +41,13 @@ def calculate_current(i):  # noqa
 def init_process(share):  # noqa
     global PROCESSES_COUNT
     PROCESSES_COUNT += 1
-    dummy.final_sum = share
+    # tmp_dummy.final_sum = share
     if not IS_QUIET:
-        print('Init Process N {}'.format(PROCESSES_COUNT))
+        print('Init Process {}'.format(multiprocessing.current_process().name))
 
 
 def main():  # noqa
-    global PROCESSES_COUNT, IS_QUIET
+    global IS_QUIET, final_res
     parser = argparse.ArgumentParser(description='Calculate e.')
     # parser.add_argument(
     #     'integers', metavar='N', type=int, nargs='+',
@@ -90,17 +97,15 @@ def main():  # noqa
     # print('processors_number', processors_number)
     # print('digits_precision', digits_precision)
     # print('IS_QUIET', IS_QUIET)
-    # return
-    dc.getcontext().prec = digits_precision
 
-    # for i in range(iterations_count):
-    #     SUM += calculate_current(i)
+    dc.getcontext().prec = digits_precision
+    final_res = dc.Decimal(0)
 
     # allocate shared array - want lock=False in this case since we
     # aren't writing to it and want to allow multiple processes to access
     # at the same time - I think with lock=True there would be little or
     # no speedup
-    result = multiprocessing.Value('d', 0.)
+    result = multiprocessing.Value('i', 0)
     # result = multiprocessing.Value(c_longdouble, 0.)
 
     # fork
@@ -109,15 +114,15 @@ def main():  # noqa
 
     start = time.time()
 
-    jobs = [pool.apply_async(calculate_current, [i]) for i in range(iterations_count)]  # noqa
+    jobs = [pool.apply_async(calculate_current, [i], callback=add_current) for i in range(iterations_count)]  # noqa
 
     for x in jobs:
         x.get()
-
+    print(final_res)
     if not IS_QUIET:
         print('Number of started processes: {count}'.format(count=PROCESSES_COUNT))  # noqa
 
-    print(result.value)
+    # print(result.value)
     print('Total execution time: {time_took}'.format(time_took=(time.time() - start)))  # noqa
 
     pool.close()
