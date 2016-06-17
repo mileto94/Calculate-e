@@ -3,7 +3,7 @@ import decimal as dc
 import time
 import argparse
 import multiprocessing
-from ctypes import *
+from ctypes import *  # noqa
 
 import dummy
 # dummy.final_sum = dc.Decimal(dummy.final_sum)
@@ -18,7 +18,7 @@ def calculate_current(i):  # noqa
     b = c_ulonglong(factorial(3 * i))
     print(a.value)
     print(b.value)
-    # current = c_ulonglong(pow(3 * i, 2) + 1).value / c_ulonglong(factorial(3 * i)).value
+    # current = c_ulonglong(pow(3 * i, 2) + 1).value / c_ulonglong(factorial(3 * i)).value  # noqa
     current = c_longdouble(a.value / b.value)
     print('current', current.value)
     dummy.final_sum.value += current.value
@@ -50,7 +50,7 @@ def main():  # noqa
         # dest='accumulate',
         action='store_true',
         default=False,
-        help='Specify quiet mode of calculating. By default it is disabled.')
+        help='Specify quiet mode of calculating. Quiet mode does not print output during calculations. By default it is disabled.')  # noqa
 
     parser.add_argument(
         '-p',
@@ -58,7 +58,7 @@ def main():  # noqa
         metavar='N',
         type=int,
         default=2000,
-        help='Specify number of iterations (items in sequence). If not specified it is set to 2 000.')
+        help='Specify number of iterations (items in sequence). If not specified it is set to 2 000.')  # noqa
 
     parser.add_argument(
         '-t',
@@ -66,7 +66,7 @@ def main():  # noqa
         metavar='N',
         type=int,
         default=multiprocessing.cpu_count(),
-        help='Specify number of processors to be used for the calculation. If not specified it is set to max cpu count of current PC.')
+        help='Specify number of processors to be used for the calculation. If not specified it is set to max cpu count of current PC.')  # noqa
 
     parser.add_argument(
         '-d',
@@ -74,7 +74,7 @@ def main():  # noqa
         metavar='N',
         type=int,
         default=20000,
-        help='Specify set precision for calculation. If not specified it is set to 20 000.')
+        help='Specify set precision for calculation. If not specified it is set to 20 000.')  # noqa
 
     args = parser.parse_args()
     # iterations_count = args.p if args.p else 2000
@@ -104,20 +104,21 @@ def main():  # noqa
     result = multiprocessing.Value(c_longdouble, 0.)
 
     # fork
-    pool = multiprocessing.Pool(processors_number, initializer=init_process, initargs=(result,))
+    pool = multiprocessing.Pool(
+        processors_number, initializer=init_process, initargs=(result,))
 
     start = time.time()
 
-    jobs = [pool.apply_async(calculate_current, [i]) for i in range(iterations_count)]
+    jobs = [pool.apply_async(calculate_current, [i]) for i in range(iterations_count)]  # noqa
 
     for x in jobs:
         x.get()
 
     if not IS_QUIET:
-        print('Number of started processes: {count}'.format(count=PROCESSES_COUNT))
+        print('Number of started processes: {count}'.format(count=PROCESSES_COUNT))  # noqa
 
     print(result.value)
-    print('Total execution time: {time_took}'.format(time_took=(time.time() - start)))
+    print('Total execution time: {time_took}'.format(time_took=(time.time() - start)))  # noqa
 
     pool.close()
     pool.join()
