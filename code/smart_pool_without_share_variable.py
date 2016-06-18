@@ -3,15 +3,10 @@ import decimal as dc
 import time
 import argparse
 import multiprocessing
-# from ctypes import *  # noqa
-
-import tmp_dummy
 
 
 # p = 2000 ~ Execution time: 22.088331699371338
-PROCESSES_COUNT = 0
 IS_QUIET = False
-# dc.getcontext().prec = 999999999
 final_res = dc.Decimal(0)
 PREC_COUNT = 2000
 
@@ -19,7 +14,6 @@ PREC_COUNT = 2000
 def calculate_current(i):  # noqa
     current = dc.Decimal((pow(3 * i, 2) + 1)) / dc.Decimal(factorial(3 * i))
     if not IS_QUIET:
-        # print('calculate_current', 'id:', i, 'value:', tmp_dummy.final_sum.value)
         print('process {} is calculating calculate_current with index {}'.format(multiprocessing.current_process(), i))
     return current
 
@@ -28,14 +22,9 @@ def add_current(current):  # noqa
     dc.getcontext().prec = PREC_COUNT
     final_res += current
     print('Final result: {}'.format(final_res))
-    tmp_dummy.final_sum += current
-    # print(current)
 
 
-def init_process(share):  # noqa
-    global PROCESSES_COUNT
-    PROCESSES_COUNT += 1
-    tmp_dummy.final_sum = share
+def init_process():  # noqa
     if not IS_QUIET:
         print('Init Process {}'.format(multiprocessing.current_process().name))
 
@@ -91,16 +80,9 @@ e=∑((3k)^2 + 1) / ((3k)!), k =0,... ,∞''')
     dc.getcontext().prec = digits_precision
     final_res = dc.Decimal(0)
 
-    # allocate shared array - want lock=False in this case since we
-    # aren't writing to it and want to allow multiple processes to access
-    # at the same time - I think with lock=True there would be little or
-    # no speedup
-    result = multiprocessing.Value('f', 0.)
-    # result = multiprocessing.Value(c_longdouble, 0.)
-
     # fork
     pool = multiprocessing.Pool(
-        processors_number, initializer=init_process, initargs=(result,))
+        processors_number, initializer=init_process)
 
     start = time.time()
 
@@ -114,8 +96,6 @@ e=∑((3k)^2 + 1) / ((3k)!), k =0,... ,∞''')
         print('Number of started processes: {count}'.format(count=pool._processes))  # noqa
         print('RESULT: {}'.format(final_res))
 
-    # print(tmp_dummy.final_sum)
-    print(tmp_dummy.final_sum == final_res)
     print('Total execution time: {time_took}'.format(time_took=(end - start)))  # noqa
 
     with open(filename, 'w') as opened_file:
