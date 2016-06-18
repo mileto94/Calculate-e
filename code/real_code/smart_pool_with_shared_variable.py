@@ -4,7 +4,7 @@ import time
 import argparse
 import multiprocessing
 
-import tmp_dummy
+import shared_file
 
 
 # p = 2000 ~ Execution time: 22.088331699371338
@@ -15,17 +15,17 @@ PREC_COUNT = 2000
 def calculate_current(i):  # noqa
     current = dc.Decimal((pow(3 * i, 2) + 1)) / dc.Decimal(factorial(3 * i))
     if not IS_QUIET:
-        # print('calculate_current', 'id:', i, 'value:', tmp_dummy.final_sum.value)
+        # print('calculate_current', 'id:', i, 'value:', shared_file.final_sum.value)
         print('process {} is calculating calculate_current with index {}'.format(multiprocessing.current_process(), i))
     return current
 
 def add_current(current):  # noqa
     dc.getcontext().prec = PREC_COUNT
-    tmp_dummy.final_sum += current
+    shared_file.final_sum += current
 
 
 def init_process(share):  # noqa
-    tmp_dummy.final_sum = share
+    shared_file.final_sum = share
     if not IS_QUIET:
         print('Init Process {}'.format(multiprocessing.current_process().name))
 
@@ -100,12 +100,12 @@ e=∑((3k)^2 + 1) / ((3k)!), k =0,... ,∞''')
 
     if not IS_QUIET:
         print('Number of started processes: {count}'.format(count=pool._processes))  # noqa
-        print('RESULT: {}'.format(tmp_dummy.final_sum))
+        print('RESULT: {}'.format(shared_file.final_sum))
 
     print('Total execution time: {time_took}'.format(time_took=(end - start)))  # noqa
 
     with open(filename, 'w') as opened_file:
-        opened_file.write(str(tmp_dummy.final_sum))
+        opened_file.write(str(shared_file.final_sum))
 
     pool.close()
     pool.join()
