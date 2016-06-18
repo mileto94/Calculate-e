@@ -6,7 +6,7 @@ import multiprocessing
 
 # p = 2000 ~ Execution time: 22.088331699371338
 
-DIGITS_PREC = pow(2, 20)
+DIGITS_PREC = pow(2, 30)
 dc.getcontext().prec = DIGITS_PREC
 
 IS_QUIET = False
@@ -87,7 +87,7 @@ e=∑((3k)^2 + 1) / ((3k)!), where k = 0,... ,∞''')
     filename = args.o
 
     DIGITS_PREC = digits_precision
-    dc.getcontext().prec = digits_precision
+    dc.getcontext().prec = DIGITS_PREC
 
     # fork
     pool = multiprocessing.Pool(cores_number, initializer=init_process)
@@ -97,12 +97,13 @@ e=∑((3k)^2 + 1) / ((3k)!), where k = 0,... ,∞''')
 
     for x in jobs:
         x.get()
+    end = time.time()
 
     if not IS_QUIET:
         print('Number of started processes: {count}'.format(count=pool._processes))  # noqa
         print('RESULT: {}'.format(final_res))
 
-    print('Total execution time: {time_took}'.format(time_took=(time.time() - start)))  # noqa
+    print('Total execution time: {time_took}'.format(time_took=(end - start)))  # noqa
 
     with open(filename, 'w') as opened_file:
         opened_file.write(str(final_res))
