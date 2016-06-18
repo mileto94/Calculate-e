@@ -6,7 +6,8 @@ import multiprocessing
 
 # p = 2000 ~ Execution time: 22.088331699371338
 
-dc.getcontext().prec = 99
+DIGITS_PREC = pow(2, 20)
+dc.getcontext().prec = DIGITS_PREC
 
 IS_QUIET = False
 final_res = dc.Decimal(0)
@@ -22,6 +23,7 @@ def calculate_current(i):  # noqa
 
 def add_current(current):  # noqa
     global final_res
+    dc.getcontext().prec = DIGITS_PREC
     final_res += current
     print(current)
     print('Final result: {}'.format(final_res))
@@ -33,7 +35,11 @@ def init_process():  # noqa
 
 
 def main():  # noqa
-    global IS_QUIET, final_res
+    """
+    Create pool of Processes. Each process receives number of item in the sum
+and uses it in calculate_current function.
+    """
+    global IS_QUIET, final_res, DIGITS_PREC
 
     parser = argparse.ArgumentParser(description='''
 This is multiprocessing program which calculates e as a finite sum with Python:
@@ -80,6 +86,7 @@ e=∑((3k)^2 + 1) / ((3k)!), where k = 0,... ,∞''')
     IS_QUIET = args.q
     filename = args.o
 
+    DIGITS_PREC = digits_precision
     dc.getcontext().prec = digits_precision
 
     # fork
